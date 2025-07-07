@@ -1,0 +1,137 @@
+### 3. Architecture de l’application
+
+La conception de l’architecture est une phase fondamentale de tout projet informatique. Elle définit la structure globale du système, les technologies qui le composent, et la manière dont ses différents modules interagissent. Une architecture bien pensée est le gage de la robustesse, de la maintenabilité et de l’évolutivité d’une application. Pour FitTracker, nous avons opté pour une architecture moderne, monolithique mais fortement découplée, qui tire parti de la puissance de l’écosystème Next.js pour unifier le développement front-end et back-end au sein d’un même projet. Cette approche, tout en simplifiant le processus de développement et de déploiement, impose une rigueur dans l’organisation du code pour maintenir une séparation claire des responsabilités.
+
+---
+
+#### **3.1 Stack technique utilisée**
+
+Le choix de la stack technique est une décision stratégique qui influence l’ensemble du cycle de vie du projet. Pour FitTracker, chaque technologie a été sélectionnée pour sa pertinence, sa performance et sa capacité à répondre aux exigences fonctionnelles et techniques du cahier des charges.
+
+*   **Front-end : Next.js (React)**
+    *   **Description** : Next.js est un framework React qui offre une structure de développement complète, incluant le rendu côté serveur (SSR), la génération de sites statiques (SSG), le routage basé sur le système de fichiers, et un environnement de développement optimisé.
+    *   **Justification** : Le choix de Next.js a été motivé par plusieurs facteurs clés. Premièrement, sa capacité à gérer à la fois le front-end et le back-end simplifie considérablement la configuration du projet et le déploiement. Deuxièmement, le rendu côté serveur améliore les performances perçues par l’utilisateur et est bénéfique pour le référencement naturel (SEO), un atout pour une application grand public. Enfin, son écosystème riche et sa forte communauté garantissent un support solide et une grande variété de librairies compatibles, comme `shadcn/ui` que nous avons utilisée pour construire rapidement une interface utilisateur moderne et accessible.
+
+*   **Back-end : Next.js API Routes**
+    *   **Description** : Next.js permet de créer des points de terminaison d’API (endpoints) directement dans le dossier `app/api/`. Ces routes s’exécutent côté serveur (dans un environnement Node.js) et peuvent interagir directement avec la base de données ou d’autres services.
+    *   **Justification** : Plutôt que de créer un serveur Node.js/Express distinct, nous avons exploité les API Routes de Next.js. Cette approche monolithique présente des avantages significatifs pour un projet de cette envergure : un seul dépôt de code, une seule configuration de build, et un déploiement unifié. Cela réduit la complexité opérationnelle tout en permettant de développer une API RESTful complète et sécurisée, capable de gérer l’authentification, la logique métier et la manipulation des données.
+
+*   **Base de données : PostgreSQL**
+    *   **Description** : PostgreSQL est un système de gestion de base de données relationnelle (SGBDR) open-source, réputé pour sa robustesse, sa conformité aux standards SQL et ses fonctionnalités avancées (transactions, triggers, types de données complexes).
+    *   **Justification** : La nature des données de FitTracker (utilisateurs, séances, objectifs) est fortement relationnelle. PostgreSQL était donc un choix naturel. Sa fiabilité et sa capacité à gérer des requêtes complexes sont essentielles pour les fonctionnalités de statistiques et de suivi. De plus, son excellente intégration avec l’écosystème Node.js et sa popularité dans les environnements de production en font un choix sûr et pérenne.
+
+*   **ORM (Object-Relational Mapping) : Aucun (Client PostgreSQL direct)**
+    *   **Description** : Un ORM comme Sequelize ou Prisma permet de manipuler la base de données en utilisant des objets et des méthodes JavaScript, plutôt que d’écrire des requêtes SQL brutes.
+    *   **Justification** : Pour ce projet, nous avons fait le choix délibéré de ne pas utiliser d’ORM. À la place, nous avons utilisé le client `pg` pour interagir directement avec la base de données via des requêtes SQL. Cette décision a été prise dans un but pédagogique : maîtriser le langage SQL et comprendre en profondeur le fonctionnement des interactions avec la base de données. Cela nous a également permis d’écrire des requêtes très optimisées pour les fonctionnalités complexes, comme les vues matérialisées et les triggers, qui sont plus difficiles à gérer via un ORM. La centralisation des requêtes dans le module `lib/db.ts` a permis de conserver un code propre et maintenable.
+
+*   **Conteneurisation : Docker & Docker Compose**
+    *   **Description** : Docker est une plateforme qui permet de créer, déployer et exécuter des applications dans des conteneurs logiciels. Docker Compose est un outil pour définir et exécuter des applications Docker multi-conteneurs.
+    *   **Justification** : L’utilisation de Docker a été cruciale pour garantir la portabilité et la reproductibilité de l’environnement de développement. Grâce à un fichier `docker-compose.yml`, n’importe quel développeur peut lancer l’intégralité de l’application (l’application Next.js et la base de données PostgreSQL) avec une seule commande, sans se soucier de la configuration de sa machine locale. Cela élimine le syndrome du "ça marche sur ma machine" et simplifie grandement la préparation au déploiement en production.
+
+---
+
+#### **3.2 Organisation logique**
+
+L’application FitTracker est structurée comme un monolithepiloté par Next.js, mais avec une organisation interne qui respecte une séparation logique stricte entre les différentes couches applicatives.
+
+1.  **La couche de présentation (Front-end)** :
+    *   Située principalement dans le dossier `app/`, elle contient toutes les pages et les composants React qui constituent l’interface utilisateur.
+    *   Le routage est géré par la convention de nommage des dossiers de Next.js (par exemple, `app/dashboard/page.tsx` correspond à l’URL `/dashboard`).
+    *   Les composants sont conçus pour être réutilisables et sont situés dans `components/ui/` (composants `shadcn/ui`) et `components/` (composants spécifiques à l’application).
+    *   Cette couche est responsable de l’affichage des données, de la capture des interactions utilisateur (clics, formulaires) et de la communication avec la couche back-end via des appels à l’API REST.
+
+2.  **La couche de service (Back-end)** :
+    *   Implémentée via les API Routes dans le dossier `app/api/`. Chaque sous-dossier correspond à une ressource de l’API (ex: `app/api/auth/`, `app/api/workouts/`).
+    *   Cette couche expose une API RESTful que le front-end consomme. Elle est le point d’entrée pour toutes les opérations nécessitant une logique métier ou un accès aux données.
+    *   Elle est responsable de la validation des données entrantes, de la gestion de l’authentification et des autorisations (vérification des tokens JWT), et de l’orchestration des appels à la couche d’accès aux données.
+
+3.  **La couche d’accès aux données (Data Access Layer)** :
+    *   Centralisée dans le module `lib/db.ts`. Ce fichier agit comme une abstraction entre la couche de service et la base de données.
+    *   Il contient toutes les fonctions qui exécutent des requêtes SQL (ex: `getUserByEmail`, `createWorkout`). En centralisant ces fonctions, nous évitons de disperser du code SQL dans les gestionnaires de routes de l’API, ce qui rend le code plus facile à maintenir et à tester.
+
+4.  **La couche de support et utilitaires (Core/Lib)** :
+    *   Située dans le dossier `lib/`, elle regroupe des modules transversaux.
+    *   `lib/auth.ts` gère tout ce qui est lié à la sécurité : hachage des mots de passe, création et vérification des tokens JWT.
+    *   `lib/utils.ts` contient des fonctions utilitaires génériques, comme la fonction `cn` pour fusionner les classes Tailwind CSS.
+
+Cette organisation, bien que contenue dans un seul projet, mime la structure d’une application microservices, avec des frontières claires entre les responsabilités, ce qui facilite grandement la compréhension du code et son évolution future.
+
+---
+
+#### **3.3 Diagramme d’architecture (cf. Annexe 5)**
+
+Pour visualiser l’interaction entre ces différentes couches, un diagramme d’architecture détaillé est fourni en **Annexe 5**. Ce diagramme illustre le flux d’une requête typique au sein de l’application FitTracker.
+
+Le flux peut être résumé comme suit :
+1.  L’**Utilisateur** interagit avec son **Navigateur Web**.
+2.  Le navigateur charge l’interface utilisateur depuis le **serveur Next.js (couche de présentation)**.
+3.  Une action de l’utilisateur (ex: soumettre un formulaire) déclenche un appel `fetch` vers l’**API REST (couche de service)** hébergée sur le même serveur Next.js.
+4.  Le gestionnaire de route de l’API valide la requête, vérifie l’authentification (via `lib/auth.ts`), puis appelle la fonction appropriée de la **couche d’accès aux données (`lib/db.ts`)**.
+5.  Cette fonction exécute une requête SQL sur la **base de données PostgreSQL**.
+6.  La réponse de la base de données remonte les couches jusqu’au navigateur, qui met à jour l’interface utilisateur.
+
+L’ensemble de ce système (serveur Next.js et base de données PostgreSQL) est encapsulé et orchestré par **Docker**, garantissant un environnement cohérent et isolé.
+
+\`\`\`mermaid title="Diagramme d'architecture de FitTracker" type="diagram"
+graph TD;
+    subgraph "Environnement Utilisateur"
+        User[Utilisateur] --> Browser[Navigateur Web];
+    end
+
+    subgraph "Environnement Docker"
+        subgraph "Serveur Next.js (Monolithe)"
+            Browser -- "Requêtes HTTP/HTTPS" --> Next_Frontend[Couche Présentation<br>(React Components, Pages)];
+            Next_Frontend -- "Appels API (fetch)" --> Next_Backend[Couche Service<br>(API Routes)];
+            Next_Backend -- "Logique métier" --> Lib_Auth[Couche Sécurité<br>(lib/auth.ts)];
+            Next_Backend -- "Appels de fonctions" --> Lib_DB[Couche Accès Données<br>(lib/db.ts)];
+        end
+
+        subgraph "Base de Données"
+            Postgres[PostgreSQL Database];
+        end
+
+        Lib_DB -- "Requêtes SQL" --> Postgres;
+    end
+
+    style User fill:#f9f,stroke:#333,stroke-width:2px
+    style Browser fill:#9cf,stroke:#333,stroke-width:2px
+\`\`\`
+
+---
+
+#### **3.4 API REST (cf. Annexe 6)**
+
+L’API de FitTracker est conçue selon les principes de l’architecture REST (Representational State Transfer). Elle utilise les verbes HTTP standards pour manipuler les ressources, et le format JSON pour l’échange de données. Une documentation complète des points de terminaison, incluant les formats de requête et de réponse, est disponible en **Annexe 6**.
+
+Les principales ressources exposées par l’API sont :
+*   `/api/auth` : Gère l’inscription (`/register`) et la connexion (`/login`).
+    *   `POST /api/auth/register` : Crée un nouvel utilisateur.
+    *   `POST /api/auth/login` : Authentifie un utilisateur et retourne un token JWT.
+*   `/api/workouts` : Gère les séances d’entraînement de l’utilisateur connecté.
+    *   `POST /api/workouts` : Ajoute une nouvelle séance.
+    *   `GET /api/workouts` : Récupère l’historique des séances.
+*   `/api/dashboard` : Fournit les données agrégées pour le tableau de bord de l’utilisateur.
+    *   `GET /api/dashboard` : Récupère les statistiques, les séances récentes et les objectifs actifs.
+*   `/api/admin` : Regroupe les routes réservées aux administrateurs.
+    *   `GET /api/admin/users` : Liste tous les utilisateurs de la plateforme.
+    *   `PATCH /api/admin/users/[id]` : Modifie le statut d’un utilisateur.
+
+Toutes les routes (à l’exception de l’inscription et de la connexion) sont protégées et nécessitent un token JWT valide, transmis dans l’en-tête `Authorization` de la requête. Les routes d’administration effectuent une vérification supplémentaire pour s’assurer que l’utilisateur possède bien le rôle `admin`.
+
+---
+
+#### **3.5 Séparation des responsabilités**
+
+Le principe de séparation des responsabilités (Separation of Concerns) est un pilier de notre architecture. Il consiste à diviser l’application en plusieurs parties distinctes, chacune ayant une responsabilité unique et bien définie. Cette pratique améliore la clarté, la maintenabilité et la testabilité du code.
+
+Dans FitTracker, ce principe se manifeste à plusieurs niveaux :
+
+1.  **Front-end vs. Back-end** : Bien qu’ils coexistent dans le même projet, le code du front-end (`app/**/page.tsx`, `components/`) est clairement séparé de celui du back-end (`app/api/`). Les composants React ne contiennent aucune logique métier complexe ni requête de base de données. Leur seul rôle est d’afficher des données et de déléguer les actions à l’API.
+
+2.  **Contrôleurs vs. Logique métier** : Nos gestionnaires de routes d’API (`route.ts`) agissent comme des contrôleurs. Ils se contentent de gérer le cycle de vie de la requête HTTP (recevoir la requête, extraire les données, envoyer la réponse). La logique métier plus complexe, comme la validation des données ou l’interaction avec la base de données, est déléguée à des fonctions importées depuis les modules de la `lib`.
+
+3.  **Isolation de l’accès aux données** : Le module `lib/db.ts` est le seul endroit de l’application autorisé à communiquer directement avec la base de données. Si nous décidions demain de changer de SGBD ou de passer à un ORM, seul ce fichier devrait être modifié en profondeur, sans impacter le reste de l’application.
+
+4.  **Isolation de la sécurité** : De même, `lib/auth.ts` encapsule toute la logique d’authentification. La manière dont les mots de passe sont hachés ou dont les tokens sont générés est un détail d’implémentation caché au reste de l’application. Cela permet de mettre à jour les mécanismes de sécurité de manière centralisée et sécurisée.
+
+En appliquant rigoureusement ce principe, nous avons construit une base de code saine et structurée. Chaque fichier a un rôle clair, ce qui facilite la navigation dans le projet, la correction de bugs et l’ajout de nouvelles fonctionnalités sans craindre des effets de bord inattendus.

@@ -1,0 +1,67 @@
+fitracker/
+├── .dockerignore               # Fichiers à ignorer par Docker lors du build
+├── .env.example                # Modèle pour les variables d'environnement
+├── .eslintrc.json              # Configuration pour ESLint (qualité du code)
+├── .gitignore                  # Fichiers à ignorer par Git
+├── Dockerfile                  # Instructions pour construire l'image Docker de l'app
+├── README.md                   # Documentation du projet
+├── components.json             # Configuration pour les composants shadcn/ui
+├── docker-compose.yml          # Définit les services Docker (app, db, etc.)
+├── next.config.mjs             # Configuration de Next.js
+├── package.json                # Dépendances et scripts du projet (npm)
+├── package-lock.json           # Verrouille les versions des dépendances
+├── postcss.config.mjs          # Configuration de PostCSS (pour Tailwind)
+├── tailwind.config.js          # Configuration de Tailwind CSS
+├── tsconfig.json               # Configuration de TypeScript
+│
+├── app/                        # Cœur de l'application (convention App Router de Next.js)
+│   ├── (auth)/                 # Groupe de routes pour l'authentification
+│   │   ├── login/
+│   │   │   └── page.tsx        # Page de connexion
+│   │   └── register/
+│   │       └── page.tsx        # Page d'inscription
+│   │
+│   ├── (main)/                 # Groupe de routes pour l'application principale (protégées)
+│   │   ├── dashboard/
+│   │   │   └── page.tsx        # Tableau de bord de l'utilisateur
+│   │   ├── goals/
+│   │   │   └── page.tsx        # Page de gestion des objectifs
+│   │   ├── history/
+│   │   │   └── page.tsx        # Page de l'historique des séances
+│   │   └── workout/
+│   │       └── new/
+│   │           └── page.tsx    # Page pour ajouter une nouvelle séance
+│   │
+│   ├── admin/                  # Groupe de routes pour le panel administrateur
+│   │   └── page.tsx            # Page principale du panel admin
+│   │
+│   ├── api/                    # Routes de l'API backend
+│   │   ├── auth/
+│   │   │   ├── login/route.ts
+│   │   │   └── register/route.ts
+│   │   ├── dashboard/route.ts
+│   │   ├── workouts/route.ts
+│   │   └── admin/
+│   │       ├── users/
+│   │       │   ├── [id]/route.ts # API pour un utilisateur spécifique
+│   │       │   └── route.ts      # API pour la liste des utilisateurs
+│   │       └── stats/route.ts
+│   │
+│   ├── globals.css             # Styles CSS globaux
+│   └── layout.tsx              # Layout racine de l'application
+│
+├── components/                 # Composants React réutilisables
+│   ├── ui/                     # Composants de la librairie shadcn/ui (Button, Card, etc.)
+│   └── theme-provider.tsx      # Fournisseur de thème (ex: dark mode)
+│
+├── lib/                        # Fonctions et modules partagés
+│   ├── auth.ts                 # Fonctions liées à l'authentification (JWT, etc.)
+│   ├── db.ts                   # Connexion à la base de données
+│   └── utils.ts                # Fonctions utilitaires diverses (ex: cn pour classnames)
+│
+├── public/                     # Fichiers statiques accessibles publiquement
+│   └── placeholder.svg         # Images, icônes, etc.
+│
+└── scripts/                    # Scripts d'automatisation et de maintenance
+    ├── init-database.sql       # Script SQL pour créer les tables et triggers
+    └── docker-setup.sh         # Script pour faciliter le lancement avec Docker

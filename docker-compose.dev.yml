@@ -1,0 +1,59 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - DATABASE_URL=${DATABASE_URL}
+        - JWT_SECRET=${JWT_SECRET}
+    container_name: fittracker-app-dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    networks:
+      - fittracker-dev-network
+    volumes:
+      - .:/app
+      - /app/.next
+    # La ligne ci-dessous est la correction clé.
+    # Elle remplace la commande de démarrage du Dockerfile par celle de développement.
+    command: npm run dev
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: fittracker-db-dev
+    environment:
+      POSTGRES_DB: fittracker_dev
+      POSTGRES_USER: fittracker_user
+      POSTGRES_PASSWORD: fittracker_pass
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - fittracker-dev-network
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: fittracker-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@fittracker.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8081:80"
+    depends_on:
+      - postgres
+    networks:
+      - fittracker-dev-network
+    restart: unless-stopped
+
+networks:
+  fittracker-dev-network:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+    driver: local

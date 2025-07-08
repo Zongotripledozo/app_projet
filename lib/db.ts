@@ -52,6 +52,26 @@ export async function createUser(data: any) {
   return res.rows[0]
 }
 
+// Update user profile
+export async function updateUserProfile(userId: string, data: any) {
+  const { firstName, lastName, email, dateOfBirth, gender, heightCm, weightKg } = data
+  const res = await query(
+    `UPDATE users SET
+      first_name = $1,
+      last_name = $2,
+      email = $3,
+      date_of_birth = $4,
+      gender = $5,
+      height_cm = $6,
+      weight_kg = $7,
+      updated_at = CURRENT_TIMESTAMP
+     WHERE id = $8
+     RETURNING id, email, first_name, last_name, date_of_birth, gender, height_cm, weight_kg`,
+    [firstName, lastName, email, dateOfBirth, gender, heightCm, weightKg, userId]
+  )
+  return res.rows[0]
+}
+
 // --- Workout Functions ---
 export async function getWorkoutsByUserId(userId: string) {
   const res = await query("SELECT * FROM workouts WHERE user_id = $1 ORDER BY workout_date DESC", [userId])

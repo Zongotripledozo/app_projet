@@ -34,11 +34,25 @@ export const WorkoutSchema = z.object({
   workoutDate: z.string().optional(),
 })
 
-export const GoalSchema = z.object({
+const GoalSchema = z.object({
   title: z.string().min(2, { message: "Le titre de l'objectif doit contenir au moins 2 caractères." }),
   goalType: z.string().min(1, { message: "Le type d'objectif est requis." }),
   targetValue: z.coerce.number().positive().optional(),
   targetUnit: z.string().optional(),
   targetDate: z.string().optional(),
   description: z.string().optional(),
+});
+
+// Export GoalSchema as goalSchema for compatibility with existing imports
+export { GoalSchema, GoalSchema as goalSchema };
+
+// Schéma pour la mise à jour du profil (sans mot de passe)
+export const ProfileUpdateSchema = z.object({
+  firstName: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères." }),
+  lastName: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
+  email: z.string().email({ message: "Veuillez entrer une adresse email valide." }),
+  dateOfBirth: z.string().optional(),
+  gender: z.enum(["male", "female", "other"]).optional(),
+  heightCm: z.coerce.number().positive().optional(),
+  weightKg: z.coerce.number().positive().optional(),
 })

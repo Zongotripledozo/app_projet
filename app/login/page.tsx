@@ -40,12 +40,32 @@ export default function LoginPage() {
         throw new Error(result.error || "Une erreur s'est produite.")
       }
 
+      // Store token and user in localStorage for client-side fetches and admin checks
+      if (typeof window !== "undefined") {
+        localStorage.setItem("auth-token", result.token || "")
+        if (result.user) {
+          // Add role property for admin check
+          const userWithRole = {
+            ...result.user,
+            role: result.user.isAdmin ? "admin" : "user"
+          }
+          localStorage.setItem("user", JSON.stringify(userWithRole))
+        }
+      }
+
       toast({
         title: "Connexion réussie!",
         description: "Bienvenue sur votre tableau de bord.",
       })
 
-      router.push("/dashboard")
+      // Redirection après login
+      const params = new URLSearchParams(window.location.search)
+      const redirect = params.get("redirect")
+      if (redirect) {
+        router.replace(redirect)
+      } else {
+        router.push("/dashboard")
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",

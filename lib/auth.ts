@@ -58,6 +58,9 @@ export function withAuth(handler: RouteHandler, options: AuthOptions = {}) {
     const authHeader = req.headers.get("authorization")
     const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : req.cookies.get("auth-token")?.value
 
+    // Add debug log for the token
+    console.log("[withAuth] Received token:", token)
+
     if (!token) {
       return NextResponse.json({ error: "Accès non autorisé: Token manquant" }, { status: 401 })
     }

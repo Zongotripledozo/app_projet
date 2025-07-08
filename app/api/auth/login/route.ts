@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       message: "Connexion réussie",
+      token: token, // Ajout du token dans la réponse
       user: {
         id: user.id,
         email: user.email,
